@@ -1,10 +1,14 @@
 package livrokotlin.com.br
 
+import android.app.Activity
+import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import kotlinx.android.synthetic.main.activity_main.*
+import java.text.NumberFormat
+import java.util.Locale
 
 class MainActivity : AppCompatActivity() {
 
@@ -13,31 +17,18 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         //Implementação do adaptador
-        val produtosAdapter = ArrayAdapter<String>(this, android.R.layout.simple_list_item_1)
+        val produtosAdapter = ProdutoAdapter(this)
+
 
         //definindo o adaptador na lista
         list_view_produtos.adapter = produtosAdapter
 
-        //definição do ouvinte do botão
-        btn_inserir.setOnClickListener{
+        btn_adicionar.setOnClickListener{
+            //Criando a intent explícita
+            val intent = Intent(this, CadastroActivity::class.java)
 
-            //pegando o valor digitado pelo usuário
-            val produto = txt_produto.text.toString()
-
-            //enviando o item para oa lista
-            //produtosAdapter.add(produto)
-
-            //verificando se o usuário digitou algum valor
-            if(produto.isNotEmpty()) {
-                //enviando o item para a lista
-                produtosAdapter.add(produto)
-
-                //limpando a caixa de texto
-                txt_produto.text.clear()
-
-            }else{
-                txt_produto.error = "Preencha um valor"
-            }
+            //iniciando a atividade
+            startActivity(intent)
         }
 
         list_view_produtos.setOnItemLongClickListener{ adapterView: AdapterView<*>, view, position: Int, id: Long ->
@@ -51,5 +42,22 @@ class MainActivity : AppCompatActivity() {
             //retorno indicando que o click foi realizado com sucesso
             true
         }
+
+
     }
+    override fun onResume() {
+        super.onResume()
+
+        val adapter =list_view_produtos.adapter as ProdutoAdapter
+
+        adapter.clear()
+        adapter.addAll(produtosGlobal)
+
+        val soma = produtosGlobal.sumByDouble { it.valor * it.quantidade }
+        val f = NumberFormat.getCurrencyInstance(Locale("pt", "br"))
+        txt_total.text = "TOTAL: ${ f.format(soma)}"
+    }
+
+
+
 }
