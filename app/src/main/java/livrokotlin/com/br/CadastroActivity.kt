@@ -4,59 +4,90 @@ import android.app.Activity
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import androidx.appcompat.app.AppCompatActivity
 import kotlinx.android.synthetic.main.activity_cadastro.*
-
-
+import org.jetbrains.anko.db.insert
+import org.jetbrains.anko.toast
 
 class CadastroActivity : AppCompatActivity() {
-    val COD_IMAGE = 101
+
+    val COD_IMAGE = 201
+    var imageBitMap: Bitmap? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_cadastro)
 
-        //definição do ouvinte do botão
-        btn_inserir.setOnClickListener{
 
-            //pegando os valores digitados pelo usuário
+        //definição do ouvinte do botão
+        btn_inserir.setOnClickListener {
+
+            //pegando o valor digitado pelo usuario
             val produto = txt_produto.text.toString()
             val qtd = txt_qtd.text.toString()
             val valor = txt_valor.text.toString()
 
-            //enviando o item para oa lista
-            //produtosAdapter.add(produto)
 
-            //verificando se o usuário digitou algum valor
-            if(produto.isNotEmpty() && qtd.isNotEmpty() && valor.isNotEmpty()) {
-                val prod = Produto(produto, qtd.toInt(), valor.toDouble(), imageBitMap)
-                produtosGlobal.add(prod)
+            //verificando se o usuario digitou algum valor
+            if (produto.isNotEmpty() && qtd.isNotEmpty()  && valor.isNotEmpty()) {
 
-                txt_produto.text.clear()
-                txt_qtd.text.clear()
-                txt_valor.text.clear()
+
+                database.use{
+
+                    val idProduto = insert("Produtos",
+                        "nomeProduto" to produto,
+                        "quantidade" to qtd,
+                        "valor" to valor.toDouble(),
+                        "foto" to imageBitMap?.toByteArray()
+                    )
+
+
+                    if(idProduto != -1L){
+
+                        toast("Item inserido com sucesso")
+
+                        txt_produto.text.clear()
+                        txt_qtd.text.clear()
+                        txt_valor.text.clear()
+
+                    }else{
+
+                        toast("Erro ao inserir no banco de dados")
+                    }
+
+                }
+
+
 
             }else{
-                txt_produto.error = if(txt_produto.text.isEmpty()) "Preencha o nome do produto"
-                else null
-                txt_qtd.error = if(txt_qtd.text.isEmpty()) "Preencha a quantidade" else null
+
+                txt_produto.error = if (txt_produto.text.isEmpty()) "Preencha o nome do produto" else null
+                txt_qtd.error = if (txt_qtd.text.isEmpty()) "Preencha a quantidade" else null
                 txt_valor.error = if (txt_valor.text.isEmpty()) "Preencha o valor" else null
             }
+
         }
 
-        var imageBitMap: Bitmap? = null
+
+        img_foto_produto.setOnClickListener {
+
+            abrirGaleria()
+
+        }
+
     }
+
+
     fun abrirGaleria(){
-        //definindo a ação de conteúdo
+
         val intent = Intent(Intent.ACTION_GET_CONTENT)
-
-        //definindo filtro para imagens
         intent.type = "image/*"
+        startActivityForResult(Intent.createChooser(intent, "Selecione uma imagem"), COD_IMAGE)
 
-        //inicializando a activity com resultado
-        startActivityForResult(Intent.createChooser(intent, "Selecion e uma imagem"), COD_IMAGE)
     }
+
+
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
 
@@ -73,4 +104,5 @@ class CadastroActivity : AppCompatActivity() {
 
         }
     }
+
 }
